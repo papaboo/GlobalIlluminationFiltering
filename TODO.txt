@@ -1,0 +1,12 @@
+Output good and bad test images when done training
+Load images in parallel
+Automatically download dataset
+Help with installing OpenEXR!!
+Metrics
+* SSIM
+* PSNR
+Log loss and metrics
+* Can we log to the console in validation_step?
+Outlier analysis and visualize diff- and SSIM-image
+New and exciting networks :)
+Extend/weight loss to focus on border regions
