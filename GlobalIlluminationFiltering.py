@@ -4,7 +4,9 @@ from torch.nn import functional as F
 from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from pytorch_lightning.core.lightning import LightningModule
+from pytorch_lightning.loggers import TensorBoardLogger
 
+from Analyze import analyze_dataset
 from ImageDataset import ImageDataset
 from Visualize import visualize_result
 
@@ -70,25 +72,13 @@ if __name__ == '__main__':
     validation_data_loader = DataLoader(validation_set, batch_size=8)
 
     model = GlobalIlluminationFiltering()
-    trainer = pl.Trainer(max_epochs=5, gpus=1, profiler="simple")
+
+    logger = TensorBoardLogger('tensorboard', name='GlobalIlluminationFiltering')
+    log_dir = logger.log_dir
+    trainer = pl.Trainer(max_epochs=1, gpus=1, profiler="simple", logger=logger)
     trainer.fit(model, DataLoader(training_set, batch_size=8, shuffle=True), validation_data_loader)
 
     result = trainer.test(model, validation_data_loader)
     print(result)
 
-    device = model.device()
-    for batch_idx, batch in enumerate(validation_data_loader):
-        input, reference_images = batch
-        batch_size = reference_images.shape[0]
-        
-        color, albedo, normals, positions = input
-        color = color.to(device)
-        albedo = albedo.to(device)
-        normals = normals.to(device)
-        positions = positions.to(device)
-
-        inferred_images = model.forward((color, albedo, normals, positions))
-
-        for b in range(0, batch_size):
-            visualize_result(color[b], inferred_images[b], reference_images[b])
-
+    analyze_dataset(model, validation_data_loader, log_dir)

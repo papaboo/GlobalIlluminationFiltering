@@ -52,27 +52,27 @@ def show_data(reference_tensor, color_tensor, albedo_tensor, normal_tensor, posi
     plt.show()
 
 
-def visualize_result(single_sample_tensor, infered_tensor, reference_tensor):
-    plt.subplot(1, 4, 1)
-    plt.imshow(tensor_to_image(to_sRGB(single_sample_tensor.cpu())))
-    plt.title("1 sample")
+def visualize_result(single_sample_tensor, infered_tensor, reference_tensor, current_row=1, row_count=1, show=True):
+    ncols = 4
+    plot_index = (current_row - 1) * ncols
 
+    plt.subplot(row_count, ncols, plot_index + 1)
+    plot_image("1 sample", single_sample_tensor.cpu())
+
+    plt.subplot(row_count, ncols, plot_index + 2)
     infered_tensor_cpu = infered_tensor.cpu()
-    plt.subplot(1, 4, 2)
-    plt.imshow(tensor_to_image(to_sRGB(infered_tensor_cpu)))
-    plt.title("Inferred")
+    plot_image("Inferred", infered_tensor_cpu)
 
+    plt.subplot(row_count, ncols, plot_index + 3)
     reference_tensor_cpu = reference_tensor.cpu()
-    plt.subplot(1, 4, 3)
-    plt.imshow(tensor_to_image(to_sRGB(reference_tensor_cpu)))
-    plt.title("Reference")
+    plot_image("Inferred", reference_tensor_cpu)
 
+    plt.subplot(row_count, ncols, plot_index + 4)
     diff_tensor_cpu = torch.abs(infered_tensor_cpu - reference_tensor_cpu)
-    plt.subplot(1, 4, 4)
-    plt.imshow(tensor_to_image(to_sRGB(diff_tensor_cpu)))
-    plt.title("Diff")
+    plot_image("Diff", diff_tensor_cpu)
 
-    plt.show()
+    if show:
+        plt.show()
 
 
 def tensor_to_image(tensor):
@@ -83,3 +83,10 @@ def tensor_to_image(tensor):
 
 def to_sRGB(linear_tensor):
     return linear_tensor.pow(1.0 / 2.2) # TODO Proper linear to sRGB. But this is fine for now
+
+def plot_image(title, linear_tensor):
+    plt.imshow(tensor_to_image(to_sRGB(linear_tensor)))
+    ax = plt.gca()
+    ax.axes.xaxis.set_ticks([])
+    ax.axes.yaxis.set_ticks([])
+    plt.title(title)
