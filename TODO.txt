@@ -1,5 +1,3 @@
-Load images in parallel
-Automatically download dataset
 Metrics
 * SSIM
 * PSNR
