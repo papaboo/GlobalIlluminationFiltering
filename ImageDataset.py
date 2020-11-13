@@ -19,9 +19,9 @@ def load_exr_as_tensor(filename):
     width = dw.max.x - dw.min.x + 1
     height = dw.max.y - dw.min.y + 1
 
-    red_channel = np.fromstring(exr_data.channels('R')[0], dtype=np.float32).reshape(height, width)
-    green_channel = np.fromstring(exr_data.channels('G')[0], dtype=np.float32).reshape(height, width)
-    blue_channel = np.fromstring(exr_data.channels('B')[0], dtype=np.float32).reshape(height, width)
+    red_channel = np.frombuffer(exr_data.channels('R')[0], dtype=np.float32).reshape(height, width)
+    green_channel = np.frombuffer(exr_data.channels('G')[0], dtype=np.float32).reshape(height, width)
+    blue_channel = np.frombuffer(exr_data.channels('B')[0], dtype=np.float32).reshape(height, width)
 
     image_matrix = np.stack((red_channel, green_channel, blue_channel), axis=0)
 
@@ -45,9 +45,7 @@ class ImageDataset(Dataset):
                 for filename in filenames:
                     if filename.startswith("color"):
                         image_number = filename[5:-4] # Remove 'color' prefix and .exr extension from name
-                        if not partial_set or image_number[-1] == '0':
-                            images = self.load_images(image_root, image_number)
-                            self.images.append(images)
+                        self.images.append((image_root, image_number, None))
                     
     
     def __len__(self):
@@ -57,7 +55,12 @@ class ImageDataset(Dataset):
     # Return tuple of input images and target image
     # ((color, albedo, shading_normal, world_position), reference)
     def __getitem__(self, index):
-        return self.images[index]
+        image_root, image_number, images = self.images[index]
+        if images is None:
+            images = self.load_images(image_root, image_number)
+            self.images[index] = (image_root, image_number, images)
+
+        return images
 
 
     def load_images(self, directory:str, number:str):

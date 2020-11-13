@@ -24,9 +24,6 @@ class GlobalIlluminationFiltering(LightningModule):
             nn.CELU(inplace=True)
         )
 
-    def device(self):
-        return next(self.parameters()).device
-
     def forward(self, input):
         color, albedo, normals, positions = input
 
@@ -69,14 +66,14 @@ if __name__ == '__main__':
 
     training_set = ImageDataset(["Dataset/classroom/inputs", "Dataset/living-room/inputs", "Dataset/sponza/inputs", "Dataset/sponza-(glossy)/inputs", "Dataset/sponza-(moving-light)/inputs"], partial_set=partial_set)
     validation_set = ImageDataset(["Dataset/san-miguel/inputs"], partial_set=partial_set)
-    validation_data_loader = DataLoader(validation_set, batch_size=8)
+    validation_data_loader = DataLoader(validation_set, batch_size=8, num_workers=8)
 
     model = GlobalIlluminationFiltering()
 
     logger = TensorBoardLogger('tensorboard', name='GlobalIlluminationFiltering')
     log_dir = logger.log_dir
     trainer = pl.Trainer(max_epochs=1, gpus=1, profiler="simple", logger=logger)
-    trainer.fit(model, DataLoader(training_set, batch_size=8, shuffle=True), validation_data_loader)
+    trainer.fit(model, DataLoader(training_set, batch_size=8, shuffle=True, num_workers=8), validation_data_loader)
 
     result = trainer.test(model, validation_data_loader)
     print(result)
