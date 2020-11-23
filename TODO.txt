@@ -1,11 +1,9 @@
-Metrics
-* SSIM
-* PSNR
+Visualize diff- and SSIM-image as analysis images
 Log loss and metrics
 * Can we log to the console in validation_step?
-Visualize diff- and SSIM-image as analysis images
 New and exciting networks :)
 Extend/weight loss to focus on border regions
+If the loss depends on the pixel intensity (fx MSE), then rescale the loss by that intensity, such that highlights and dark regions contribute equally, or make exposure great again. :)
 Analyse which feature vectors are the most important by looking at the derivatives.
 * Train networks with a single feature vector.
 * Train networks with all but a single feature vector

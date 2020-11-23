@@ -3,16 +3,8 @@ import torch
 import torchvision
 
 def show_HDR_tensor(hdr_tensor):
-    hdr_tensor_cpu = hdr_tensor.cpu()
-
     plt.subplot(1, 2, 1)
-    plt.imshow(tensor_to_image(hdr_tensor_cpu))
-    plt.title("HDR")
-
-    plt.subplot(1, 2, 2)
-    plt.imshow(tensor_to_image(to_sRGB(hdr_tensor_cpu)))
-    plt.title("HDR sRGB")
-
+    plt.imshow(tensor_to_image(to_sRGB(hdr_tensor.cpu())))
     plt.show()
 
 
