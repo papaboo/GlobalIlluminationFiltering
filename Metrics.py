@@ -25,9 +25,12 @@ def SSIM_pr_pixel(noisy_tensor, reference_tensor, filter_std_dev = 1.5):
     padding = kernel_size // 2
 
     # Tensor layout is [.. x channels x height x width]
-    width = noisy_tensor.size()[-1]
-    height = noisy_tensor.size()[-2]
+    is_batch = len(noisy_tensor.size()) == 4
+    image_count = noisy_tensor.size()[0] if is_batch else 1
     channels = noisy_tensor.size()[-3]
+    height = noisy_tensor.size()[-2]
+    width = noisy_tensor.size()[-1]
+    stacked_channels = image_count * channels
 
     # Create a gaussian filter window
     kernel_size = min(kernel_size, height, width)
@@ -36,18 +39,16 @@ def SSIM_pr_pixel(noisy_tensor, reference_tensor, filter_std_dev = 1.5):
     gaussian_1D = gaussian_1D.unsqueeze(0)
 
     gaussian_2D = gaussian_1D.t().mm(gaussian_1D)
-    gaussian_2D = gaussian_2D.unsqueeze(0).expand(channels, 1, kernel_size, kernel_size)
+    gaussian_2D = gaussian_2D.expand(stacked_channels, 1, kernel_size, kernel_size)
 
-    noisy_tensor = noisy_tensor.unsqueeze(0)
-    reference_tensor = reference_tensor.unsqueeze(0)
+    noisy_tensor = noisy_tensor.view(1, stacked_channels, height, width)
+    reference_tensor = reference_tensor.view(1, stacked_channels, height, width)
 
     # Normalize weight near the border of the tensor.
     ones = torch.ones((1, 1, height, width), dtype=noisy_tensor.dtype)
     normalizer = F.conv2d(ones, gaussian_2D, padding=padding)
 
-    # Expand guassian kernel to number of image channels
-    gaussian_2D = gaussian_2D.expand(channels, 1, kernel_size, kernel_size)
-    guassian_conv2d = lambda tensor: F.conv2d(tensor, gaussian_2D, padding=padding, groups=channels) / normalizer
+    guassian_conv2d = lambda tensor: F.conv2d(tensor, gaussian_2D, padding=padding, groups=stacked_channels) / normalizer
 
     # calculating the mu parameter (locally) for both images using a gaussian filter calculates the luminosity params
     mu_x = guassian_conv2d(noisy_tensor)
@@ -70,7 +71,11 @@ def SSIM_pr_pixel(noisy_tensor, reference_tensor, filter_std_dev = 1.5):
     numerator = (2 * mu_xy + c1) * (2 * sigma_xy + c2)
     denominator = (mu_x_sq + mu_y_sq + c1) * (sigma_x_sq + sigma_y_sq + c2)
     ssim_score = numerator / denominator
-    return ssim_score.squeeze(0)
+
+    if is_batch:
+        return ssim_score.view(image_count, channels, height, width)
+    else:
+        return ssim_score.view(channels, height, width)
 
 
 def normalized_SSIM_pr_pixel(noisy_tensor, reference_tensor, filter_std_dev = 1.5):
@@ -95,16 +100,34 @@ if __name__ == '__main__':
     (color_tensor, _, _, _), reference_tensor = training_set[0]
 
     identity_psnr = PSNR(reference_tensor, reference_tensor).item()
-    print(f"PSNR of same images: {identity_psnr}")
+    print(f"PSNR of same images: {identity_psnr:.6f}")
 
     noisy_psnr = PSNR(color_tensor, reference_tensor).item()
-    print(f"PSNR of noisy and reference images: {noisy_psnr}")
+    print(f"PSNR of noisy and reference images: {noisy_psnr:.6f}")
 
     identity_ssim = SSIM(reference_tensor, reference_tensor).item()
-    print(f"SSIM of same images: {identity_ssim}")
+    print(f"SSIM of same images: {identity_ssim:.6f}")
 
     noisy_ssim = SSIM(color_tensor, reference_tensor).item()
-    print(f"SSIM of noisy and reference images: {noisy_ssim}")
+    print(f"SSIM of noisy and reference images: {noisy_ssim:.6f}")
 
+    # Test that SSIM works on batched images. The mean of all channels should roughly equal the result from SSIM on the single image.
+    stacked_color_tensor = torch.stack((color_tensor, color_tensor, color_tensor))
+    stacked_reference_tensor = torch.stack((reference_tensor, reference_tensor, reference_tensor))
+    ssim = SSIM(stacked_color_tensor, stacked_reference_tensor).item()
+    print(f"SSIM of stacked noisy and reference images: {ssim:.6f}")
+
+    # Test that SSIM works on a single channel image. The mean of all channels should roughly equal the result from SSIM on the full image.
+    red, green, blue = torch.split(color_tensor, 1)
+    red_ref, green_ref, blue_ref = torch.split(reference_tensor, 1)
+    red_ssim = SSIM(red, red_ref).item()
+    print(f"SSIM of red noisy and reference images: {red_ssim:.6f}")
+    green_ssim = SSIM(green, green_ref).item()
+    print(f"SSIM of green noisy and reference images: {green_ssim:.6f}")
+    blue_ssim = SSIM(blue, blue_ref).item()
+    print(f"SSIM of blue noisy and reference images: {blue_ssim:.6f}")
+    print(f"  mean: {(red_ssim + green_ssim + blue_ssim) / 3:.6f}")
+
+    # Visualize SSIM image
     ssim_image = normalized_SSIM_pr_pixel(color_tensor, reference_tensor, 1.5)
     show_HDR_tensor(ssim_image)
