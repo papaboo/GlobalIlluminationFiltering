@@ -24,13 +24,16 @@ def SSIM_pr_pixel(noisy_tensor, reference_tensor, filter_std_dev = 1.5):
     kernel_size = 2 * kernel_halfsize + 1
     padding = kernel_size // 2
 
-    # Tensor layout is [.. x channels x height x width]
-    is_batch = len(noisy_tensor.size()) == 4
-    image_count = noisy_tensor.size()[0] if is_batch else 1
+    # Tensor layout is [batch_size x channels x height x width]
+    is_batched = len(noisy_tensor.size()) == 4
+    batch_size = noisy_tensor.size()[0] if is_batched else 1
     channels = noisy_tensor.size()[-3]
     height = noisy_tensor.size()[-2]
     width = noisy_tensor.size()[-1]
-    stacked_channels = image_count * channels
+
+    if not is_batched:
+        noisy_tensor = noisy_tensor.unsqueeze(0)
+        reference_tensor = reference_tensor.unsqueeze(0)
 
     # Create a gaussian filter window
     kernel_size = min(kernel_size, height, width)
@@ -39,16 +42,14 @@ def SSIM_pr_pixel(noisy_tensor, reference_tensor, filter_std_dev = 1.5):
     gaussian_1D = gaussian_1D.unsqueeze(0)
 
     gaussian_2D = gaussian_1D.t().mm(gaussian_1D)
-    gaussian_2D = gaussian_2D.expand(stacked_channels, 1, kernel_size, kernel_size)
-
-    noisy_tensor = noisy_tensor.view(1, stacked_channels, height, width)
-    reference_tensor = reference_tensor.view(1, stacked_channels, height, width)
 
     # Normalize weight near the border of the tensor.
     ones = torch.ones((1, 1, height, width), dtype=noisy_tensor.dtype)
+    gaussian_2D = gaussian_2D.expand(1, 1, kernel_size, kernel_size)
     normalizer = F.conv2d(ones, gaussian_2D, padding=padding)
 
-    guassian_conv2d = lambda tensor: F.conv2d(tensor, gaussian_2D, padding=padding, groups=stacked_channels) / normalizer
+    gaussian_2D = gaussian_2D.expand(channels, 1, kernel_size, kernel_size)
+    guassian_conv2d = lambda tensor: F.conv2d(tensor, gaussian_2D, padding=padding, groups=channels) / normalizer
 
     # calculating the mu parameter (locally) for both images using a gaussian filter calculates the luminosity params
     mu_x = guassian_conv2d(noisy_tensor)
@@ -71,11 +72,7 @@ def SSIM_pr_pixel(noisy_tensor, reference_tensor, filter_std_dev = 1.5):
     numerator = (2 * mu_xy + c1) * (2 * sigma_xy + c2)
     denominator = (mu_x_sq + mu_y_sq + c1) * (sigma_x_sq + sigma_y_sq + c2)
     ssim_score = numerator / denominator
-
-    if is_batch:
-        return ssim_score.view(image_count, channels, height, width)
-    else:
-        return ssim_score.view(channels, height, width)
+    return ssim_score if is_batched else ssim_score.squeeze(0)
 
 
 def normalized_SSIM_pr_pixel(noisy_tensor, reference_tensor, filter_std_dev = 1.5):
