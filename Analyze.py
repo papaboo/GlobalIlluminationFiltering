@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import torch
 
 from Visualize import visualize_result
 
@@ -25,25 +26,28 @@ def output_predictions(predictions, data_loader, title, output_filename):
 def analyze_dataset(model, data_loader, output_folder:str=None):
     device = next(model.parameters()).device
 
+    model.eval()
+
     predictions = []
-    for batch_index, batch in enumerate(data_loader):
-        input, reference_images = batch
-        batch_size = reference_images.shape[0]
-        batch_index_offset = batch_size * batch_index
-        
-        color, albedo, normals, positions = input
-        color = color.to(device)
-        albedo = albedo.to(device)
-        normals = normals.to(device)
-        positions = positions.to(device)
-        reference_images = reference_images.to(device)
+    with torch.no_grad():
+        for batch_index, batch in enumerate(data_loader):
+            input, reference_images = batch
+            batch_size = reference_images.shape[0]
+            batch_index_offset = batch_size * batch_index
+            
+            color, albedo, normals, positions = input
+            color = color.to(device)
+            albedo = albedo.to(device)
+            normals = normals.to(device)
+            positions = positions.to(device)
+            reference_images = reference_images.to(device)
 
-        inferred_images = model.forward((color, albedo, normals, positions))
+            inferred_images = model.forward((color, albedo, normals, positions))
 
-        for b in range(0, batch_size):
-            loss = model.loss_function(inferred_images[b], reference_images[b]).item()
-            predictions.append((loss, batch_index_offset + b, inferred_images[b]))
-    
+            for b in range(0, batch_size):
+                loss = model.loss_function(inferred_images[b], reference_images[b]).item()
+                predictions.append((loss, batch_index_offset + b, inferred_images[b]))
+
     predictions.sort()
 
     # Visualize or output the four worst and four best predictions
@@ -58,7 +62,7 @@ if __name__ == '__main__':
     from GlobalIlluminationFiltering import GlobalIlluminationFiltering
     from Visualize import visualize_result
     from ImageDataset import ImageDataset
-    
+
     from torch.utils.data import DataLoader
 
     partial_set = True
@@ -66,5 +70,5 @@ if __name__ == '__main__':
     validation_data_loader = DataLoader(validation_set, batch_size=8)
 
     model = GlobalIlluminationFiltering()
-    
+
     analyze_dataset(model, validation_data_loader)

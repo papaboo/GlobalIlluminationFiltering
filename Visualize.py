@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 import torch
 import torchvision
 
+from Metrics import normalized_SSIM_pr_pixel
+
 def show_HDR_tensor(hdr_tensor):
     plt.subplot(1, 2, 1)
     plt.imshow(tensor_to_image(to_sRGB(hdr_tensor.cpu())))
@@ -9,7 +11,7 @@ def show_HDR_tensor(hdr_tensor):
 
 
 def show_data(reference_tensor, color_tensor, albedo_tensor, normal_tensor, position_tensor):
-    
+
     nrows = 2
     ncols = 3
 
@@ -45,7 +47,7 @@ def show_data(reference_tensor, color_tensor, albedo_tensor, normal_tensor, posi
 
 
 def visualize_result(single_sample_tensor, infered_tensor, reference_tensor, current_row=1, row_count=1, show=True):
-    ncols = 4
+    ncols = 5
     plot_index = (current_row - 1) * ncols
 
     plt.subplot(row_count, ncols, plot_index + 1)
@@ -61,7 +63,13 @@ def visualize_result(single_sample_tensor, infered_tensor, reference_tensor, cur
 
     plt.subplot(row_count, ncols, plot_index + 4)
     diff_tensor_cpu = torch.abs(infered_tensor_cpu - reference_tensor_cpu)
-    plot_image("Diff", diff_tensor_cpu)
+    norm1 = diff_tensor_cpu.mean().item()
+    plot_image(f"Diff ({norm1:.4f})", diff_tensor_cpu)
+
+    plt.subplot(row_count, ncols, plot_index + 5)
+    ssim_tensor = normalized_SSIM_pr_pixel(infered_tensor_cpu, reference_tensor_cpu)
+    ssim_error = ssim_tensor.mean().item()
+    plot_image(f"Diff ({ssim_error:.4f})", ssim_tensor)
 
     if show:
         plt.show()
