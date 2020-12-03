@@ -26,7 +26,6 @@ def SSIM_pr_pixel(noisy_tensor, reference_tensor, filter_std_dev = 1.5):
 
     # Tensor layout is [batch_size x channels x height x width]
     is_batched = len(noisy_tensor.size()) == 4
-    batch_size = noisy_tensor.size()[0] if is_batched else 1
     channels = noisy_tensor.size()[-3]
     height = noisy_tensor.size()[-2]
     width = noisy_tensor.size()[-1]
@@ -42,9 +41,10 @@ def SSIM_pr_pixel(noisy_tensor, reference_tensor, filter_std_dev = 1.5):
     gaussian_1D = gaussian_1D.unsqueeze(0)
 
     gaussian_2D = gaussian_1D.t().mm(gaussian_1D)
+    gaussian_2D = gaussian_2D.to(noisy_tensor.device)
 
     # Normalize weight near the border of the tensor.
-    ones = torch.ones((1, 1, height, width), dtype=noisy_tensor.dtype)
+    ones = torch.ones((1, 1, height, width), dtype=noisy_tensor.dtype).to(noisy_tensor.device)
     gaussian_2D = gaussian_2D.expand(1, 1, kernel_size, kernel_size)
     normalizer = F.conv2d(ones, gaussian_2D, padding=padding)
 
