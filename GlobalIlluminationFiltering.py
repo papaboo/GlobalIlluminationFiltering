@@ -9,6 +9,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from Analyze import analyze_dataset
 from ImageDataset import ImageDataset
 from Visualize import visualize_result
+from Metrics import SSIM
 
 class GlobalIlluminationFiltering(LightningModule):
     def __init__(self):
@@ -23,6 +24,7 @@ class GlobalIlluminationFiltering(LightningModule):
             nn.Conv2d(16, 3, kernel_size=3, stride=1, padding=1),
             nn.CELU(inplace=True)
         )
+
 
     def forward(self, input):
         color, albedo, normals, positions = input
@@ -40,22 +42,52 @@ class GlobalIlluminationFiltering(LightningModule):
 
         return filtered_color
 
+
     def configure_optimizers(self):
         return torch.optim.Adam(self.parameters(), lr=1e-3)
+
 
     def training_step(self, batch, batch_idx):
         input, target = batch
         inference = self(input)
+
+        # SSIM pr epoch
+        with torch.no_grad():
+            ssim = SSIM(inference, target).item()
+            self.log(f'train_ssim', ssim, on_step=False, on_epoch=True, prog_bar=True)
+
         return self.loss_function(inference, target)
+
+
+    def get_progress_bar_dict(self):
+        # don't show the version number
+        items = super().get_progress_bar_dict()
+        items.pop("v_num", None)
+        return items
+
+
+    # Print a newline when epoch ends to keep the progress bar from the previous epoch
+    # Unfortunately per training epoch logging is done after this, so those results are shown in the next epochs progress bar.
+    def training_epoch_end(self, foo):
+        print('\n')
+
 
     def evaluation_step(self, batch, batch_idx, step_name):
         input, target = batch
         inference = self(input)
+
+        # Loss
         loss = self.loss_function(inference, target).item()
-        self.log(f'{step_name}_loss', loss)
-    
+        self.log(f'{step_name}_loss', loss, on_epoch=True, prog_bar=True)
+
+        # SSIM
+        ssim = SSIM(inference, target).item()
+        self.log(f'{step_name}_ssim', ssim, on_epoch=True, prog_bar=True)
+
+
     def validation_step(self, batch, batch_idx):
         self.evaluation_step(batch, batch_idx, "val")
+
 
     def test_step(self, batch, batch_idx):
         self.evaluation_step(batch, batch_idx, "test")

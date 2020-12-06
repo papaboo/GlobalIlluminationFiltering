@@ -1,5 +1,3 @@
-Log loss and metrics
-* Can we log to the console in validation_step?
 New and exciting networks :)
 If the loss depends on the pixel intensity (fx MSE), then rescale the loss by that intensity, such that highlights and dark regions contribute equally, or make exposure great again. :)
 Extend/weight loss to focus on border regions
