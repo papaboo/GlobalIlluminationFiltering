@@ -8,39 +8,21 @@ from pytorch_lightning.loggers import TensorBoardLogger
 
 from Analyze import analyze_dataset
 from ImageDataset import ImageDataset
-from Visualize import visualize_result
 from Metrics import SSIM
+import Networks
+from Visualize import visualize_result
 
 class GlobalIlluminationFiltering(LightningModule):
     def __init__(self):
         super().__init__()
 
-        self.loss_function = lambda x, y: ((x - y) ** 2).mean()
+        self.loss_function = nn.MSELoss()
 
-        self.features = nn.Sequential(
-            nn.Conv2d(9, 16, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm2d(16),
-            nn.CELU(inplace=True),
-            nn.Conv2d(16, 3, kernel_size=3, stride=1, padding=1),
-            nn.CELU(inplace=True)
-        )
+        self.net = Networks.ConvNet()
 
 
     def forward(self, input):
-        color, albedo, normals, positions = input
-
-        # Factor out albedo
-        light = color / (albedo + 0.00001) # Slight bias to avoid division by zero
-
-        x = torch.cat((light, albedo, normals), dim=1)
-        filtered_light = self.features(x)
-
-        # Multiply by albedo
-        filtered_color = filtered_light * albedo
-
-        # TODO Bilateral filter based on infered depth and std dev
-
-        return filtered_color
+        return self.net(input)
 
 
     def configure_optimizers(self):
@@ -95,17 +77,18 @@ class GlobalIlluminationFiltering(LightningModule):
 
 if __name__ == '__main__':
     partial_set = False
+    batch_size=1
 
     training_set = ImageDataset(["Dataset/classroom/inputs", "Dataset/living-room/inputs", "Dataset/sponza/inputs", "Dataset/sponza-(glossy)/inputs", "Dataset/sponza-(moving-light)/inputs"], partial_set=partial_set)
     validation_set = ImageDataset(["Dataset/san-miguel/inputs"], partial_set=partial_set)
-    validation_data_loader = DataLoader(validation_set, batch_size=8, num_workers=8)
+    validation_data_loader = DataLoader(validation_set, batch_size=batch_size, num_workers=8)
 
     model = GlobalIlluminationFiltering()
 
     logger = TensorBoardLogger('tensorboard', name='GlobalIlluminationFiltering')
     log_dir = logger.log_dir
-    trainer = pl.Trainer(max_epochs=1, gpus=1, profiler="simple", logger=logger)
-    trainer.fit(model, DataLoader(training_set, batch_size=8, shuffle=True, num_workers=8), validation_data_loader)
+    trainer = pl.Trainer(max_epochs=16, gpus=1, profiler="simple", logger=logger)
+    trainer.fit(model, DataLoader(training_set, batch_size=batch_size, shuffle=True, num_workers=8), validation_data_loader)
 
     result = trainer.test(model, validation_data_loader)
     print(result)

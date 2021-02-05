@@ -1,6 +1,18 @@
+Output images pr epoch
+
+Output Onnx pr epoch
+
+Can we flag the pr pixel embedding tensor in the onnx file?
+
 New and exciting networks :)
+* Single gaussian filter based an estimated radius, to see if a decent radius can be estimated. Will obviously have ringing artifacts.
+* Fixed radius filtering with pr pixel embedding to see if an embedding can be estimated. Should suffer from a local/global detail issue due to the fixed filter size.
+* Pr pixel embedding + trained filtering.
+
 If the loss depends on the pixel intensity (fx MSE), then rescale the loss by that intensity, such that highlights and dark regions contribute equally, or make exposure great again. :)
+
 Extend/weight loss to focus on border regions
+
 Analyse which feature vectors are the most important by
 * looking at the derivatives.
 * Train networks with a single feature vector.
