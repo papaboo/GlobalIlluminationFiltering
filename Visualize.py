@@ -59,7 +59,7 @@ def visualize_result(single_sample_tensor, infered_tensor, reference_tensor, cur
 
     plt.subplot(row_count, ncols, plot_index + 3)
     reference_tensor_cpu = reference_tensor.cpu()
-    plot_image("Inferred", reference_tensor_cpu)
+    plot_image("Reference", reference_tensor_cpu)
 
     plt.subplot(row_count, ncols, plot_index + 4)
     diff_tensor_cpu = torch.abs(infered_tensor_cpu - reference_tensor_cpu)
@@ -69,7 +69,7 @@ def visualize_result(single_sample_tensor, infered_tensor, reference_tensor, cur
     plt.subplot(row_count, ncols, plot_index + 5)
     ssim_tensor = normalized_SSIM_pr_pixel(infered_tensor_cpu, reference_tensor_cpu)
     ssim_error = ssim_tensor.mean().item()
-    plot_image(f"Diff ({ssim_error:.4f})", ssim_tensor)
+    plot_image(f"SSIM ({ssim_error:.4f})", ssim_tensor)
 
     if show:
         plt.show()
