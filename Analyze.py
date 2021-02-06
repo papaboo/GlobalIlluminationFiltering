@@ -12,9 +12,9 @@ def output_predictions(predictions, data_loader, title, output_filename):
         row_count = len(predictions)
         figure_row = 1
         for prediction in predictions:
-            loss, sample_index, inferred_image = prediction
-            (color, _, _, _), reference_image = data_loader.dataset[sample_index]
-            visualize_result(color, inferred_image, reference_image, figure_row, row_count, show=False)
+            _, sample_index, inferred_image = prediction
+            (light, albedo, _, _), reference_image = data_loader.dataset[sample_index]
+            visualize_result(light * albedo, inferred_image, reference_image, figure_row, row_count, show=False)
             figure_row += 1
         if save_to_file:
             plt.savefig(output_filename)
@@ -35,14 +35,14 @@ def analyze_dataset(model, data_loader, output_folder:str=None):
             batch_size = reference_images.shape[0]
             batch_index_offset = batch_size * batch_index
             
-            color, albedo, normals, positions = input
-            color = color.to(device)
+            light, albedo, normals, positions = input
+            light = light.to(device)
             albedo = albedo.to(device)
             normals = normals.to(device)
             positions = positions.to(device)
             reference_images = reference_images.to(device)
 
-            inferred_images = model.forward((color, albedo, normals, positions))
+            inferred_images = model.forward((light, albedo, normals, positions))
 
             for b in range(0, batch_size):
                 loss = model.loss_function(inferred_images[b], reference_images[b]).item()

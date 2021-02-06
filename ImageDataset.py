@@ -23,9 +23,9 @@ def load_exr_as_tensor(filename):
     green_channel = np.frombuffer(exr_data.channels('G')[0], dtype=np.float32).reshape(height, width)
     blue_channel = np.frombuffer(exr_data.channels('B')[0], dtype=np.float32).reshape(height, width)
 
-    image_matrix = np.stack((red_channel, green_channel, blue_channel), axis=0)
+    image_tensor = np.stack((red_channel, green_channel, blue_channel), axis=0)
 
-    return torch.Tensor(image_matrix)
+    return torch.Tensor(image_tensor)
 
 
 class ImageDataset(Dataset):
@@ -66,18 +66,18 @@ class ImageDataset(Dataset):
     def load_images(self, directory:str, number:str):
         make_path = lambda name: directory + "/" + name + number + ".exr"
 
-        color_matrix = load_exr_as_tensor(make_path("color"))
-        albedo_matrix = load_exr_as_tensor(make_path("albedo"))
-        normal_matrix = load_exr_as_tensor(make_path("shading_normal"))
-        position_matrix = load_exr_as_tensor(make_path("world_position"))
-        reference_matrix = load_exr_as_tensor(make_path("reference"))
+        light_tensor = load_exr_as_tensor(make_path("color")) # The 'color' images only contain the incoming light, not the contribution from the BRDF
+        albedo_tensor = load_exr_as_tensor(make_path("albedo"))
+        normal_tensor = load_exr_as_tensor(make_path("shading_normal"))
+        position_tensor = load_exr_as_tensor(make_path("world_position"))
+        reference_tensor = load_exr_as_tensor(make_path("reference"))
 
-        return ((color_matrix, albedo_matrix, normal_matrix, position_matrix), reference_matrix)
+        return ((light_tensor, albedo_tensor, normal_tensor, position_tensor), reference_tensor)
 
         
 if __name__ == '__main__':
     training_set = ImageDataset(["Dataset/san-miguel/inputs", "Dataset/sponza/inputs"], partial_set=True)
     print("||training_set||", len(training_set))
 
-    (color_tensor, albedo_tensor, normal_tensor, position_tensor), reference_tensor = training_set[0]
-    show_data(reference_tensor, color_tensor, albedo_tensor, normal_tensor, position_tensor)
+    (light_tensor, albedo_tensor, normal_tensor, position_tensor), reference_tensor = training_set[0]
+    show_data(reference_tensor, light_tensor * albedo_tensor, albedo_tensor, normal_tensor, position_tensor)

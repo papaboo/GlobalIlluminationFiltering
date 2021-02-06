@@ -94,7 +94,8 @@ if __name__ == '__main__':
     from Visualize import show_HDR_tensor
 
     training_set = ImageDataset(["Dataset/san-miguel/inputs"], partial_set=True)
-    (color_tensor, _, _, _), reference_tensor = training_set[0]
+    (light_tensor, albedo_tensor, _, _), reference_tensor = training_set[0]
+    color_tensor = light_tensor * albedo_tensor
 
     identity_psnr = PSNR(reference_tensor, reference_tensor).item()
     print(f"PSNR of same images: {identity_psnr:.6f}")

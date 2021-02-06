@@ -40,16 +40,13 @@ class ConvNet(nn.Module):
 
 
     def forward(self, x):
-        color, albedo, normals, positions = x
+        light, albedo, normals, positions = x
 
-        is_batch = len(color.shape) == 4
+        is_batch = len(light.shape) == 4
         if not is_batch:
-            color = color.unsqueeze(0)
+            light = light.unsqueeze(0)
             albedo = albedo.unsqueeze(0)
             normals = normals.unsqueeze(0)
-
-        # Factor out albedo
-        light = color / (albedo + 0.00001) # Slight bias to avoid division by zero
 
         x = torch.cat((light, albedo, normals), dim=1)
         embedding = self.estimate_embedding(x)
@@ -96,19 +93,16 @@ class DepthNet(nn.Module):
         self.light_filter = nn.Conv3d(4, 4, kernel_size=7, stride=1, padding=3)
 
     def forward(self, x):
-        color, albedo, normals, positions = x
+        light, albedo, normals, positions = x
 
-        if len(color.shape) == 3:
-            color = color.unsqueeze(0)
+        if len(light.shape) == 3:
+            light = light.unsqueeze(0)
             albedo = albedo.unsqueeze(0)
             normals = normals.unsqueeze(0)
 
-        image_count = color.size()[0]
-        height = color.size()[2]
-        width = color.size()[3]
-
-        # Factor out albedo
-        light = color / (albedo + 0.00001) # Slight bias to avoid division by zero
+        image_count = light.size()[0]
+        height = light.size()[2]
+        width = light.size()[3]
 
         x = torch.cat((light, albedo, normals), dim=1)
         embedding = self.estimate_embedding(x)
@@ -146,9 +140,9 @@ if __name__ == "__main__":
     # TODO Test with CUDA tensors
     dataset = ImageDataset(["Dataset/san-miguel/inputs"], partial_set=True)
     x, reference = dataset[0]
+    (light, albedo, normals, positions) = x
 
-    net = ConvNet() # DepthNet()
+    net = ConvNet()
     inferred = net.forward(x)
 
-    visualize_result(x[0], inferred, reference)
-    
+    visualize_result(light * albedo, inferred, reference)
