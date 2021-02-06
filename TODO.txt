@@ -1,9 +1,3 @@
-Output images pr epoch
-
-Output Onnx pr epoch
-
-Can we flag the pr pixel embedding tensor in the onnx file?
-
 New and exciting networks :)
 * Single gaussian filter based an estimated radius, to see if a decent radius can be estimated. Will obviously have ringing artifacts.
 * Fixed radius filtering with pr pixel embedding to see if an embedding can be estimated. Should suffer from a local/global detail issue due to the fixed filter size.

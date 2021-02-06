@@ -46,8 +46,9 @@ def show_data(reference_tensor, color_tensor, albedo_tensor, normal_tensor, posi
     plt.show()
 
 
-def visualize_result(single_sample_tensor, infered_tensor, reference_tensor, current_row=1, row_count=1, show=True):
-    ncols = 5
+def visualize_result(single_sample_tensor, infered_tensor, reference_tensor, current_row=1, row_count=1, show=True, additional_tensors = []):
+    ncols = 5 + len(additional_tensors)
+
     plot_index = (current_row - 1) * ncols
 
     plt.subplot(row_count, ncols, plot_index + 1)
@@ -70,6 +71,11 @@ def visualize_result(single_sample_tensor, infered_tensor, reference_tensor, cur
     ssim_tensor = normalized_SSIM_pr_pixel(infered_tensor_cpu, reference_tensor_cpu)
     ssim_error = ssim_tensor.mean().item()
     plot_image(f"SSIM ({ssim_error:.4f})", ssim_tensor)
+
+    for i in range(len(additional_tensors)):
+        name, tensor = additional_tensors[i]
+        plt.subplot(row_count, ncols, plot_index + i + 6)
+        plot_image(name, tensor.cpu())
 
     if show:
         plt.show()
