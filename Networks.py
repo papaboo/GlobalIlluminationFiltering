@@ -14,28 +14,20 @@ class ConvNet(nn.Module):
         self.name = "DepthNet"
 
         self.estimate_embedding = nn.Sequential(
-            nn.Conv2d(9, 32, kernel_size=5, stride=1, padding=2),
-            nn.BatchNorm2d(32),
+            nn.Conv2d(9, 32, kernel_size=5, padding=2),
             nn.ReLU(inplace=True),
-            nn.Conv2d(32, 8, kernel_size=5, stride=1, padding=2),
-            nn.BatchNorm2d(8),
+            nn.Conv2d(32, 8, kernel_size=5, padding=4, dilation=2),
             nn.ReLU(inplace=True),
-            nn.Conv2d(8, 1, kernel_size=5, stride=1, padding=2),
-            nn.BatchNorm2d(1),
+            nn.Conv2d(8, 1, kernel_size=5, padding=2),
             nn.Sigmoid()
         )
 
         self.filter_light = nn.Sequential(
-            nn.Conv2d(4, 16, kernel_size=5, stride=1, padding=2),
-            nn.BatchNorm2d(16),
+            nn.Conv2d(4, 16, kernel_size=5, padding=2),
             nn.ReLU(inplace=True),
-            nn.Conv2d(16, 8, kernel_size=5, stride=1, padding=2),
-            nn.BatchNorm2d(8),
+            nn.Conv2d(16, 8, kernel_size=5, padding=4, dilation=2),
             nn.ReLU(inplace=True),
-            nn.Conv2d(8, 3, kernel_size=5, stride=1, padding=2),
-            nn.BatchNorm2d(3),
-            nn.ReLU(inplace=True)
-            # nn.Sigmoid()
+            nn.Conv2d(8, 3, kernel_size=5, padding=2)
         )
 
 
@@ -54,6 +46,7 @@ class ConvNet(nn.Module):
         # Concatenate depth to the light
         light_embedding = torch.cat([light, embedding], dim=1)
 
+        # TODO Filter one channel at a time to ensure the same weights pr color. Should reduce the number of free parameters.
         filtered_light = self.filter_light(light_embedding)
 
         # Multiply by albedo
