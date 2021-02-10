@@ -14,7 +14,7 @@ class ConvNet(nn.Module):
         self.name = "DepthNet"
 
         self.estimate_embedding = nn.Sequential(
-            nn.Conv2d(9, 32, kernel_size=5, padding=2),
+            nn.Conv2d(6, 32, kernel_size=5, padding=2),
             nn.ReLU(inplace=True),
             nn.Conv2d(32, 8, kernel_size=5, padding=4, dilation=2),
             nn.ReLU(inplace=True),
@@ -40,7 +40,7 @@ class ConvNet(nn.Module):
             albedo = albedo.unsqueeze(0)
             normals = normals.unsqueeze(0)
 
-        x = torch.cat((light, albedo, normals), dim=1)
+        x = torch.cat((albedo, normals), dim=1)
         embedding = self.estimate_embedding(x)
 
         # Concatenate depth to the light
@@ -68,7 +68,7 @@ class DepthNet(nn.Module):
         self.depth_size = 16
 
         self.estimate_depth = nn.Sequential(
-            nn.Conv2d(9, 32, kernel_size=5, stride=1, padding=2),
+            nn.Conv2d(6, 32, kernel_size=5, stride=1, padding=2),
             nn.BatchNorm2d(32),
             nn.ReLU(inplace=True),
             nn.Conv2d(32, 8, kernel_size=5, stride=1, padding=2),
@@ -97,7 +97,7 @@ class DepthNet(nn.Module):
         height = light.size()[2]
         width = light.size()[3]
 
-        x = torch.cat((light, albedo, normals), dim=1)
+        x = torch.cat((albedo, normals), dim=1)
         embedding = self.estimate_embedding(x)
 
         # Add a channel of ones. It will be used after the gaussian filter to normalize the contribution.
