@@ -29,10 +29,10 @@ def load_exr_as_tensor(filename):
 
 
 class ImageDataset(Dataset):
-    def __init__(self, image_roots:List[str], partial_set=False):
+    def __init__(self, image_roots:List[str]):
         super().__init__()
         self.images = []
-        
+
         # Search for input/colorN.exr images and load all images associated with a sample.
         # NOTE This just barely fits in memory right now. At some point it should probably be loaded on the fly or stored compressed,
         # but right now it takes longer to load than to train, so keeping it in memory is a net win.
@@ -46,8 +46,8 @@ class ImageDataset(Dataset):
                     if filename.startswith("color"):
                         image_number = filename[5:-4] # Remove 'color' prefix and .exr extension from name
                         self.images.append((image_root, image_number, None))
-                    
-    
+
+
     def __len__(self):
         return len(self.images)
 
@@ -74,9 +74,9 @@ class ImageDataset(Dataset):
 
         return ((light_tensor, albedo_tensor, normal_tensor, position_tensor), reference_tensor)
 
-        
+
 if __name__ == '__main__':
-    training_set = ImageDataset(["Dataset/san-miguel/inputs", "Dataset/sponza/inputs"], partial_set=True)
+    training_set = ImageDataset(["Dataset/san-miguel/inputs", "Dataset/sponza/inputs"])
     print("||training_set||", len(training_set))
 
     (light_tensor, albedo_tensor, normal_tensor, position_tensor), reference_tensor = training_set[0]

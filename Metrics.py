@@ -93,7 +93,7 @@ if __name__ == '__main__':
     from ImageDataset import ImageDataset
     from Visualize import show_HDR_tensor
 
-    training_set = ImageDataset(["Dataset/san-miguel/inputs"], partial_set=True)
+    training_set = ImageDataset(["Dataset/san-miguel/inputs"])
     (light_tensor, albedo_tensor, _, _), reference_tensor = training_set[0]
     color_tensor = light_tensor * albedo_tensor
 

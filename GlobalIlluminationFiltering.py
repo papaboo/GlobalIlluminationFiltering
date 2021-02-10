@@ -96,11 +96,10 @@ class GlobalIlluminationFiltering(LightningModule):
 
 
 if __name__ == '__main__':
-    partial_set = False
     batch_size=2
 
-    training_set = ImageDataset(["Dataset/classroom/inputs", "Dataset/living-room/inputs", "Dataset/sponza/inputs", "Dataset/sponza-(glossy)/inputs", "Dataset/sponza-(moving-light)/inputs"], partial_set=partial_set)
-    validation_set = ImageDataset(["Dataset/san-miguel/inputs"], partial_set=partial_set)
+    training_set = ImageDataset(["Dataset/classroom/inputs", "Dataset/living-room/inputs", "Dataset/sponza/inputs", "Dataset/sponza-(glossy)/inputs", "Dataset/sponza-(moving-light)/inputs"])
+    validation_set = ImageDataset(["Dataset/san-miguel/inputs"])
     validation_data_loader = DataLoader(validation_set, batch_size=batch_size, num_workers=8)
 
     logger = TensorBoardLogger('tensorboard', name='GlobalIlluminationFiltering')

@@ -65,8 +65,7 @@ if __name__ == '__main__':
 
     from torch.utils.data import DataLoader
 
-    partial_set = True
-    validation_set = ImageDataset(["Dataset/san-miguel/inputs"], partial_set=partial_set)
+    validation_set = ImageDataset(["Dataset/san-miguel/inputs"])
     validation_data_loader = DataLoader(validation_set, batch_size=8)
 
     model = GlobalIlluminationFiltering()

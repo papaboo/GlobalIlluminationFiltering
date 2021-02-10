@@ -131,7 +131,7 @@ if __name__ == "__main__":
     from Visualize import visualize_result
 
     # TODO Test with CUDA tensors
-    dataset = ImageDataset(["Dataset/san-miguel/inputs"], partial_set=True)
+    dataset = ImageDataset(["Dataset/san-miguel/inputs"])
     x, reference = dataset[0]
     (light, albedo, normals, positions) = x
 
