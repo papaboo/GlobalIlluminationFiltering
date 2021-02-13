@@ -1,4 +1,12 @@
 import torch
+from torch import nn
+
+class SeparableConv2d(nn.Sequential):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=0, dilation=1, bias=True):
+        super(SeparableConv2d, self).__init__(
+            nn.Conv2d(in_channels, out_channels, kernel_size=[1, kernel_size], stride=stride, padding=[0,padding], dilation=[1,dilation], bias=bias),
+            nn.Conv2d(out_channels, out_channels, kernel_size=[kernel_size,1], stride=stride, padding=[padding,0], dilation=[dilation,1], bias=bias)
+        )
 
 
 # Expand the input with one dimension of size dim_size by inserting the new dimension between dim-1 and dim.

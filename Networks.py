@@ -1,33 +1,35 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from Utils import project_tensor, unproject_tensor
+from Utils import SeparableConv2d, project_tensor, unproject_tensor
 
 # Filter using basic (Conv2D, BatchNorm, Activation) blocks.
 # First estimate a single value embedding pr pixel.
 # Then feed the light and the embedding into a network that filters the light.
 class ConvNet(nn.Module):
 
-    def __init__(self):
+    def __init__(self, useSeperableConv2D:bool=True):
         super().__init__()
 
         self.name = "DepthNet"
 
+        conv2D = SeparableConv2d if useSeperableConv2D else nn.Conv2d
+
         self.estimate_embedding = nn.Sequential(
-            nn.Conv2d(6, 32, kernel_size=5, padding=2),
+            conv2D(6, 32, kernel_size=5, padding=2),
             nn.ReLU(inplace=True),
-            nn.Conv2d(32, 8, kernel_size=5, padding=4, dilation=2),
+            conv2D(32, 8, kernel_size=5, padding=4, dilation=2),
             nn.ReLU(inplace=True),
-            nn.Conv2d(8, 1, kernel_size=5, padding=2),
+            conv2D(8, 1, kernel_size=5, padding=2),
             nn.Sigmoid()
         )
 
         self.filter_light = nn.Sequential(
-            nn.Conv2d(4, 16, kernel_size=5, padding=2),
+            conv2D(4, 16, kernel_size=5, padding=2),
             nn.ReLU(inplace=True),
-            nn.Conv2d(16, 8, kernel_size=5, padding=4, dilation=2),
+            conv2D(16, 8, kernel_size=5, padding=4, dilation=2),
             nn.ReLU(inplace=True),
-            nn.Conv2d(8, 3, kernel_size=5, padding=2)
+            conv2D(8, 3, kernel_size=5, padding=2)
         )
 
 

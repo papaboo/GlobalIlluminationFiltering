@@ -1,3 +1,11 @@
+Augment by flipping and mirroring images
+* Flip back when outputting
+* Flip colors
+
+Output the embedding in the list of additional tensors
+
+Use normalized depth for computing the embedding
+
 New and exciting networks :)
 * Single gaussian filter based an estimated radius, to see if a decent radius can be estimated. Will obviously have ringing artifacts.
 * Fixed radius filtering with pr pixel embedding to see if an embedding can be estimated. Should suffer from a local/global detail issue due to the fixed filter size.
@@ -8,6 +16,6 @@ If the loss depends on the pixel intensity (fx MSE), then rescale the loss by th
 Extend/weight loss to focus on border regions
 
 Analyse which feature vectors are the most important by
-* looking at the derivatives.
-* Train networks with a single feature vector.
-* Train networks with all but a single feature vector
+* looking at the derivatives and then verify by
+** Train networks with a single feature vector.
+** Train networks with all but a single feature vector
