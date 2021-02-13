@@ -1,6 +1,4 @@
-Augment by flipping and mirroring images
-* Flip back when outputting
-* Flip colors
+Swizzle color channels
 
 Output the embedding in the list of additional tensors
 

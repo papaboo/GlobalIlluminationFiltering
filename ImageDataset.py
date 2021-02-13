@@ -29,9 +29,10 @@ def load_exr_as_tensor(filename):
 
 
 class ImageDataset(Dataset):
-    def __init__(self, image_roots:List[str]):
+    def __init__(self, image_roots:List[str], mirror_images=True):
         super().__init__()
         self.images = []
+        self.mirror_images = mirror_images
 
         # Search for input/colorN.exr images and load all images associated with a sample.
         # NOTE This just barely fits in memory right now. At some point it should probably be loaded on the fly or stored compressed,
@@ -58,6 +59,29 @@ class ImageDataset(Dataset):
         image_root, image_number, images = self.images[index]
         if images is None:
             images = self.load_images(image_root, image_number)
+
+            if self.mirror_images:
+                capped_index = index % 4
+
+                def flip_images(images, dims):
+                    ((light_tensor, albedo_tensor, normal_tensor, position_tensor), reference_tensor) = images
+
+                    light_tensor = torch.flip(light_tensor, dims)
+                    albedo_tensor = torch.flip(albedo_tensor, dims)
+                    normal_tensor = torch.flip(normal_tensor, dims)
+                    position_tensor = torch.flip(position_tensor, dims)
+                    reference_tensor = torch.flip(reference_tensor, dims)
+
+                    return ((light_tensor, albedo_tensor, normal_tensor, position_tensor), reference_tensor)
+
+                # Horizontal mirroring
+                if capped_index == 1 or capped_index == 3:
+                    images = flip_images(images, [2])
+
+                # Vertical mirroring
+                if capped_index == 2 or capped_index == 3:
+                    images = flip_images(images, [1])
+
             self.images[index] = (image_root, image_number, images)
 
         return images
@@ -80,4 +104,13 @@ if __name__ == '__main__':
     print("||training_set||", len(training_set))
 
     (light_tensor, albedo_tensor, normal_tensor, position_tensor), reference_tensor = training_set[0]
+    show_data(reference_tensor, light_tensor * albedo_tensor, albedo_tensor, normal_tensor, position_tensor)
+
+    (light_tensor, albedo_tensor, normal_tensor, position_tensor), reference_tensor = training_set[1]
+    show_data(reference_tensor, light_tensor * albedo_tensor, albedo_tensor, normal_tensor, position_tensor)
+
+    (light_tensor, albedo_tensor, normal_tensor, position_tensor), reference_tensor = training_set[2]
+    show_data(reference_tensor, light_tensor * albedo_tensor, albedo_tensor, normal_tensor, position_tensor)
+
+    (light_tensor, albedo_tensor, normal_tensor, position_tensor), reference_tensor = training_set[3]
     show_data(reference_tensor, light_tensor * albedo_tensor, albedo_tensor, normal_tensor, position_tensor)
