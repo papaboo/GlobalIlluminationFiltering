@@ -47,9 +47,11 @@ class GlobalIlluminationFiltering(LightningModule):
             inferred_light_tensor = inferred_tensor / (albedo_tensor + 0.0001)
             reference_tensor = target[0,:,:,:]
             reference_light_tensor = reference_tensor / (albedo_tensor + 0.0001)
+            embedding_tensor = self.net.get_embedding(input)[0,:,:,:]
             additional_tensors = [["Light", light_tensor],
                                   ["Inferred", inferred_light_tensor],
                                   ["Reference light", reference_light_tensor],
+                                  ["Embedding", embedding_tensor],
                                   ["Albedo", albedo_tensor]]
 
             fig = plt.figure(figsize = (25,5))

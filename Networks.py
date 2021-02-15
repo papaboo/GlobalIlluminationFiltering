@@ -33,19 +33,32 @@ class ConvNet(nn.Module):
         )
 
 
-    def forward(self, x):
+    def get_embedding(self, x):
         light, albedo, normals, positions = x
 
-        is_batch = len(light.shape) == 4
+        is_batch = len(albedo.shape) == 4
         if not is_batch:
-            light = light.unsqueeze(0)
             albedo = albedo.unsqueeze(0)
             normals = normals.unsqueeze(0)
 
         x = torch.cat((albedo, normals), dim=1)
         embedding = self.estimate_embedding(x)
 
-        # Concatenate depth to the light
+        if not is_batch:
+            embedding = embedding.squeeze()
+
+        return embedding
+
+
+    def forward(self, x):
+        embedding = self.get_embedding(x)
+
+        light, albedo, _, _ = x
+        is_batch = len(light.shape) == 4
+        if not is_batch:
+            light = light.unsqueeze(0)
+
+        # Concatenate embedding to the light
         light_embedding = torch.cat([light, embedding], dim=1)
 
         # TODO Filter one channel at a time to ensure the same weights pr color. Should reduce the number of free parameters.
