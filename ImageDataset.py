@@ -29,10 +29,11 @@ def load_exr_as_tensor(filename):
 
 
 class ImageDataset(Dataset):
-    def __init__(self, image_roots:List[str], mirror_images=True):
+    def __init__(self, image_roots:List[str], mirror_images=True, swizzle_colors=True):
         super().__init__()
         self.images = []
         self.mirror_images = mirror_images
+        self.swizzle_colors = swizzle_colors
 
         # Search for input/colorN.exr images and load all images associated with a sample.
         # NOTE This just barely fits in memory right now. At some point it should probably be loaded on the fly or stored compressed,
@@ -81,6 +82,20 @@ class ImageDataset(Dataset):
                 # Vertical mirroring
                 if capped_index == 2 or capped_index == 3:
                     images = flip_images(images, [1])
+
+            if self.swizzle_colors:
+                permutations = [[0,1,2], [1,0,2], [2,0,1], [0,2,1], [1,2,0], [2,1,0]]
+                permutation = permutations[index % 6]
+
+                ((light_tensor, albedo_tensor, normal_tensor, position_tensor), reference_tensor) = images
+
+                light_tensor = light_tensor[permutation,:,:]
+                albedo_tensor = albedo_tensor[permutation,:,:]
+                normal_tensor = normal_tensor[permutation,:,:]
+                position_tensor = position_tensor[permutation,:,:]
+                reference_tensor = reference_tensor[permutation,:,:]
+
+                images = ((light_tensor, albedo_tensor, normal_tensor, position_tensor), reference_tensor)
 
             self.images[index] = (image_root, image_number, images)
 

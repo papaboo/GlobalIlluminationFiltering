@@ -1,11 +1,10 @@
 Use normalized depth for computing the embedding
 
-Swizzle color channels
-
 New and exciting networks :)
 * Single gaussian filter based an estimated radius, to see if a decent radius can be estimated. Will obviously have ringing artifacts.
 * Fixed radius filtering with pr pixel embedding to see if an embedding can be estimated. Should suffer from a local/global detail issue due to the fixed filter size.
 * Pr pixel embedding + trained bilateral filtering.
+** Use torch.roll to compute the filter?
 
 If the loss depends on the pixel intensity (fx MSE), then rescale the loss by that intensity, such that highlights and dark regions contribute equally, or make exposure great again. :)
 
